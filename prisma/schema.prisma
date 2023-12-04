@@ -1,0 +1,258 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgres"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id    String @id @unique
+  email String @unique
+
+  File    File[]
+  Message Message[]
+
+  stripeCustomerId       String?                 @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?                 @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?                 @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd String?                 @map(name: "stripe_current_period_end")
+  Conversation           Conversations[]
+  Prompt                 Prompt[]
+  Question               Question[]
+  QuestionAnswerMessage  QuestionAnswerMessage[]
+  Thread                 Thread[]
+}
+
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  FAILED
+  SUCCESS
+}
+
+enum ClassNo {
+  Class1
+  Class2
+  Class3
+  Class4
+  Class5
+  Class6
+  Class7
+  Class8
+  Class9
+  Class10
+  Class11
+  Class12
+}
+
+enum subject {
+  English
+  Maths
+  Science
+  Hindi
+  SocialScience
+  History
+}
+
+// model Assistant {
+//   id           String   @id
+//   object       String
+//   created_at   Int
+//   name         String
+//   description  String?
+//   model        String
+//   instructions String
+//   tools        Json[]
+//   file_ids     String[]
+//   metadata     Json?
+//   createdAt    DateTime @default(now())
+//   updatedAt    DateTime @updatedAt
+//   books        Books[]  @relation("BooksToAssistant")
+
+//   AssistantBooks AssistantBooks[]
+//   Books          Books?           @relation(fields: [booksFileId], references: [fileId])
+//   booksFileId    String?
+// }
+
+// model Books {
+//   fileId          String           @id
+//   name            String
+//   class           ClassNo          @default(Class7)
+//   subject         subject
+//   subName         String?
+//   url             String
+//   vectorIndex     String?
+//   assistants      Assistant[]      @relation("BooksToAssistant")
+//   assistantsBooks AssistantBooks[]
+//   createdAt       DateTime         @default(now())
+//   updatedAt       DateTime         @updatedAt
+
+//   Assistant Assistant[]
+// }
+
+// model AssistantBooks {
+//   assistant   Assistant @relation(fields: [assistantId], references: [id])
+//   assistantId String
+//   book        Books     @relation(fields: [bookId], references: [fileId])
+//   bookId      String
+//   createdAt   DateTime  @default(now())
+//   updatedAt   DateTime  @updatedAt
+
+//   @@id([assistantId, bookId])
+// }
+
+model Assistant {
+  id           String   @id
+  object       String
+  created_at   Int
+  name         String
+  description  String?
+  model        String
+  instructions String
+  tools        Json[]
+  file_ids     String[]
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  books        Books[]  @relation("BooksToAssistant")
+  bookCount    Int      @default(0)
+
+  AssistantBooks AssistantBooks[]
+  Thread         Thread[]
+}
+
+model Thread {
+  id          String     @id
+  created_at  Int
+  Assistant   Assistant? @relation(fields: [assistantId], references: [id])
+  assistantId String
+  User        User       @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Books {
+  fileId          String      @id
+  name            String
+  class           ClassNo     @default(Class7)
+  subject         subject
+  subName         String?
+  url             String
+  vectorIndex     String?
+  assistants      Assistant[] @relation("BooksToAssistant")
+  assistantsCount Int         @default(0) // New field to track the count of assistants
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  AssistantBooks AssistantBooks?
+}
+
+model AssistantBooks {
+  assistant   Assistant @relation(fields: [assistantId], references: [id])
+  assistantId String
+  book        Books     @relation(fields: [bookId], references: [fileId])
+  bookId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@id([assistantId, bookId])
+  @@unique([assistantId]) // Unique constraint on assistantId field
+  @@unique([bookId]) // Unique constraint on bookId field
+}
+
+model File {
+  id           String       @id @default(cuid())
+  name         String
+  user         String
+  uploadStatus UploadStatus @default(PENDING)
+  url          String
+  key          String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  Message      Message[]
+  Conversation Conversations[]
+
+  @@index([userId])
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  text          String   @db.Text()
+  isUserMessage Boolean
+  audioUrl      String?  @db.Text()
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  User          User?    @relation(fields: [userId], references: [id])
+  userId        String?
+  File          File?    @relation(fields: [fileId], references: [id])
+  fileId        String?
+
+  Conversation   Conversations? @relation(fields: [conversationId], references: [id])
+  conversationId Int?
+
+  @@index([userId])
+  @@index([fileId])
+}
+
+model Conversations {
+  id Int @id @map("InteractionID")
+
+  interactionType String?   @db.VarChar(100)
+  User            User      @relation(fields: [userId], references: [id])
+  userId          String
+  File            File?     @relation(fields: [fileId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  fileId          String?
+  Message         Message[]
+
+  @@index([userId])
+}
+
+model Prompt {
+  id        Int        @id @default(autoincrement())
+  text      String
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  questions Question[]
+}
+
+model Question {
+  id                    Int                     @id @default(autoincrement())
+  question              String
+  userId                String
+  score                 Int?
+  active                Boolean                 @default(true)
+  user                  User                    @relation(fields: [userId], references: [id])
+  prompt                Prompt                  @relation(fields: [promptId], references: [id])
+  promptId              Int
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  QuestionAnswerMessage QuestionAnswerMessage[]
+}
+
+model QuestionAnswerMessage {
+  id            Int      @id @default(autoincrement())
+  text          String   @db.VarChar(5000)
+  audioUrl      String?  @db.Text()
+  isUserMessage Boolean
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  question      Question @relation(fields: [questionId], references: [id])
+  questionId    Int
+}
