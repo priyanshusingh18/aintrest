@@ -126,7 +126,7 @@ export const appRouter = router({
       const { id } = input;
       const file = await db.file.findFirst({
         where: {
-          key: id,
+          id: id,
           userId,
         },
       });

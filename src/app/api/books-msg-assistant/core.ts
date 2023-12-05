@@ -21,7 +21,7 @@ export const booksRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { fileId, threadId, message } = input;
       const { userId } = ctx;
-      console.log("HERE", fileId, threadId, message, userId);
+
       try {
         if (!threadId) {
           const assistant = await db.assistant.findFirst({
@@ -51,7 +51,7 @@ export const booksRouter = router({
               assistantId: assistant.id,
             },
           });
-          console.log("WHY NOT", threadDb);
+
           const threadMessages = await openai.beta.threads.messages.create(id, {
             role: "user",
             content: message,
@@ -69,7 +69,7 @@ export const booksRouter = router({
             await new Promise((resolve) => setTimeout(resolve, 1500));
             response = await openai.beta.threads.runs.retrieve(id, run.id);
           }
-          console.log("WHY");
+
           const messageList = await openai.beta.threads.messages.list(id);
           const lastMessage = messageList.data
             .filter(
@@ -152,7 +152,7 @@ export const booksRouter = router({
               run.id
             );
           }
-          console.log("WHY");
+
           const messageList = await openai.beta.threads.messages.list(threadId);
           const lastMessage = messageList.data
             .filter(

@@ -5,10 +5,17 @@ import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
+import { z } from "zod";
+import { privateProcedure } from "@/trpc/trpc";
 const f = createUploadthing();
 
-const auth = (req: Request) => ({ id: "fakeId" }); // Fake auth function
+// const auth = (req: Request) => ({ id: "fakeId" }); // Fake auth function
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
+// const accountName = "aintrestblob";
+// const containerName = "aintrestapp";
 export const ourFileRouter = {
   pdfUploader: f({ pdf: { maxFileSize: "32MB" } })
     .middleware(async ({ req }) => {

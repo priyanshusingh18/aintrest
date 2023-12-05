@@ -13,7 +13,7 @@ const Page = async ({ params }: ChatWrapperProps) => {
   const { quesid } = params;
   const { getUser } = getKindeServerSession();
   const user = getUser();
-  console.log(user, "WHY");
+
   if (!user || !user.id) console.log(user);
   // redirect(`/auth-callback?origin=answer-writing/${quesid}`);
   const config = {
