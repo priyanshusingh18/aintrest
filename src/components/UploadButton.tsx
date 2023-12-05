@@ -7,16 +7,15 @@ import { Button } from "./ui/button";
 import Dropzone from "react-dropzone";
 import { Cloud, File } from "lucide-react";
 import { Progress } from "./ui/progress";
-import { useUploadThing } from "@/lib/uploadthing";
 import { useToast } from "./ui/use-toast";
 import { trpc } from "@/app/_trpc/client";
 
 import { useRouter } from "next/navigation";
+import React from "react";
 const UploadDropzone = () => {
   const router = useRouter();
   const [isUploading, setIsUploading] = useState<boolean | null>(true);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const { startUpload } = useUploadThing("pdfUploader");
   const { toast } = useToast();
 
   const { mutate: startPolling } = trpc.getFile.useMutation({
@@ -48,20 +47,25 @@ const UploadDropzone = () => {
     <Dropzone
       multiple={false}
       onDrop={async (acceptedFiles) => {
+        console.log(acceptedFiles);
+
         setIsUploading(true);
         const progressInterval = startSimulatedProgress();
         // await new Promise((resolve, reject) => setTimeout(resolve, 250000));
-        const res = await startUpload(acceptedFiles);
-        if (!res) {
-          return toast({
-            title: "Something went wrong",
-            description: "Please try again later",
-            variant: "destructive",
-          });
-        }
-        const [fileResponse] = res;
-        const key = fileResponse.key;
-        if (!key) {
+        const file = acceptedFiles[0];
+        const formData = new FormData();
+        formData.append("file", file);
+        const contentDispositionValue = `attachment; filename="${file.name}"`;
+
+        const response = await fetch("/api/upload-pdf", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "Content-Disposition": contentDispositionValue,
+          },
+        });
+        if (!response) {
           return toast({
             title: "Something went wrong",
             description: "Please try again later",
@@ -70,7 +74,8 @@ const UploadDropzone = () => {
         }
         clearInterval(progressInterval);
         setUploadProgress(100);
-        startPolling({ id: key });
+        const as = await response.json();
+        startPolling({ id: as.key });
       }}
     >
       {({ getRootProps, getInputProps, acceptedFiles }) => (
