@@ -4,6 +4,7 @@ import { Icons } from "../Icons";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { forwardRef } from "react";
+import Player from "../audio/Player";
 
 interface MessageProps {
   message: ExtendedMessage;
@@ -73,6 +74,12 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
                 {format(new Date(message.createdAt), "HH:mm")}
               </div>
             ) : null}
+            {typeof message.text === "string" && (
+              <Player
+                text={message.text}
+                isUserMessage={message.isUserMessage}
+              />
+            )}
           </div>
         </div>
       </div>

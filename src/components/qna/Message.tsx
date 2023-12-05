@@ -6,9 +6,8 @@ import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { forwardRef, useEffect, useState } from "react";
 import { Loader2, Volume1 } from "lucide-react";
-import { trpc } from "@/app/_trpc/client";
-
-import { openai } from "@/lib/openai";
+import { useToast } from "../ui/use-toast";
+import Player from "../audio/Player";
 
 interface Message {
   id: number;
@@ -26,38 +25,66 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
   ({ message, isNextMessageSamePerson }, ref) => {
     const [audioUrl, setAudioUrl] = useState<null | string>(null);
     const [audio, setAudio] = useState<null | HTMLAudioElement>(null);
+    const { toast } = useToast();
+    useEffect(() => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        audio && (audio as HTMLAudioElement).play();
+      }
+      return () => {
+        console.log("YEY, audio", audio);
+        audio?.pause();
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      };
+    }, [audio]);
     try {
       const handlePlayAudio = async () => {
+        console.log(audioUrl, audio);
         if (audio) {
           audio.pause();
           audio.currentTime = 0;
           audio.play();
           return;
         } else if (audioUrl) {
-          setAudio(new Audio(audioUrl));
-          audio && (audio as HTMLAudioElement).play();
+          console.log("MUST COME HERE");
+          setAudio(() => new Audio(audioUrl));
+          console.log(audio);
+          // audio && (audio as HTMLAudioElement).play();
           return;
         }
         try {
-          // const audioContent = ttsResponse.data.audioContent;
-          const mp3 = await openai.audio.speech.create({
-            model: "tts-1",
-            voice: "nova",
-            input: message.text,
+          const response = await fetch("/api/audio", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: message.text,
+            }),
           });
-
-          const audioBlob = new Blob([await mp3.arrayBuffer()], {
-            type: "audio/mp3",
-          });
-
-          // const url = URL.createObjectURL(blob);
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          setAudioUrl(audioUrl);
-
-          const audio = new Audio(audioUrl);
-          audio.play();
+          if (!response.ok) {
+            toast({
+              title: "Error Playing Audio",
+              description: "Please try again later",
+              variant: "destructive",
+            });
+          }
+          const audioBlob = await response.blob();
+          const tempAudioUrl = URL.createObjectURL(audioBlob);
+          setAudioUrl(tempAudioUrl);
+          setAudio(() => new Audio(tempAudioUrl));
         } catch (error) {
+          toast({
+            title: "Error Playing Audio",
+            description: "Please try again later",
+            variant: "destructive",
+          });
           console.error("Error playing audio:", error);
         }
       };
@@ -125,7 +152,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
                   {format(new Date(message.createdAt), "HH:mm")}
                 </div>
               ) : null}
-              <button
+              {/* <button
                 className={`${
                   message.isUserMessage
                     ? "self-end rotate-180 scale-y-[-1]"
@@ -136,7 +163,11 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
                 }}
               >
                 <Volume1 className="w-4 h-4" />{" "}
-              </button>
+              </button> */}
+              <Player
+                text={message.text}
+                isUserMessage={message.isUserMessage}
+              />
             </div>{" "}
           </div>
         </div>
@@ -150,3 +181,22 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
 Message.displayName = "Message";
 
 export default Message;
+// const audio = new Audio(tempAudioUrl);
+// audio.play();
+
+// {
+//   const mp3 = await openai.audio.speech.create({
+//     model: "tts-1",
+//     voice: "nova",
+//     input: message.text,
+//   });
+
+//   const audioBlob = new Blob([await mp3.arrayBuffer()], {
+//     type: "audio/mp3",
+//   });
+//   const audioUrl = URL.createObjectURL(audioBlob);
+
+//   setAudioUrl(audioUrl);
+// }
+
+// const url = URL.createObjectURL(blob);
