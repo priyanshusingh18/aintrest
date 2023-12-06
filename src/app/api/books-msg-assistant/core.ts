@@ -56,6 +56,7 @@ export const booksRouter = router({
             role: "user",
             content: message,
           });
+
           const run = await openai.beta.threads.runs.create(id, {
             assistant_id: assistant.id,
           });
@@ -181,6 +182,57 @@ export const booksRouter = router({
         console.log(error);
         return new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
+    }),
+  runThread: privateProcedure
+    .input(z.object({ fileId: z.string(), threadId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { threadId, fileId } = input;
+      const assistant = await db.assistant.findFirst({
+        where: {
+          bookCount: 1,
+          books: {
+            every: {
+              fileId: fileId,
+            },
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!assistant)
+        return new Response("Something Went Wrong", { status: 500 });
+      const run = await openai.beta.threads.runs.create(threadId, {
+        assistant_id: assistant.id,
+      });
+      let response = await openai.beta.threads.runs.retrieve(threadId, run.id);
+
+      while (
+        response.status === "in_progress" ||
+        response.status === "queued"
+      ) {
+        console.log("waiting...");
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        response = await openai.beta.threads.runs.retrieve(threadId, run.id);
+      }
+
+      const messageList = await openai.beta.threads.messages.list(threadId);
+      const lastMessage = messageList.data
+        .filter(
+          (message: any) =>
+            message.run_id === run.id && message.role === "assistant"
+        )
+        .pop();
+      if (!lastMessage) return new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      if (lastMessage?.content[0].type === "text")
+        return {
+          thread_id: threadId,
+          text: lastMessage?.content[0].text.value,
+          created_at: lastMessage.created_at,
+          role: "assistant",
+          id: lastMessage.id,
+        };
     }),
   getMessages: privateProcedure
     .input(

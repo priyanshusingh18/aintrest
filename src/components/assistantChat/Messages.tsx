@@ -51,11 +51,23 @@ const Messages = ({ threadId }: MessagesProps) => {
     root: lastMessageRef.current,
     threshold: 1,
   });
-  // useEffect(() => {
-  //   if (entry?.isIntersecting) {
-  //     fetchNextPage();
-  //   }
-  // }, [entry, fetchNextPage]);
+  console.log(threadId);
+  if (!threadId)
+    return (
+      <div className="flex max-h-[calc(100vh-3.5rem-7rem)] mb-28  border-nic-200 flex-1 flex-col-reverse gap-4 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrollin-touch">
+        <Message
+          ref={ref}
+          message={{
+            text: "TEMP MESSAGE",
+            id: "lkajsd",
+            created_at: Number(new Date().toTimeString),
+            role: "user",
+          }}
+          isNextMessageSamePerson={false}
+          key={12}
+        />
+      </div>
+    );
   return (
     <div className="flex max-h-[calc(100vh-3.5rem-7rem)] mb-28  border-nic-200 flex-1 flex-col-reverse gap-4 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrollin-touch">
       {combinedMessages && combinedMessages.length > 0 ? (

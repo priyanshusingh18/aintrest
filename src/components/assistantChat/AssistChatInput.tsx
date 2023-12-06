@@ -9,8 +9,9 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 interface ChatInputProps {
   isDisabled: boolean;
+  threadId: string | null;
 }
-const ChatInput = ({ isDisabled }: ChatInputProps) => {
+const ChatInput = ({ isDisabled, threadId }: ChatInputProps) => {
   const { addMessage, handleInputChange, isLoading, message } =
     useContext(AssistContext);
   const commands = [
