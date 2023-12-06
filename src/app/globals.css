@@ -122,23 +122,8 @@
   font-weight:700;
   src:url(https://cdn.openai.com/common/fonts/soehne/soehne-halbfett-kursiv.woff2) format("woff2");
 } 
-  body {  
-    color:var(--text-default);
-    font-family:var(--sans-serif);
-    font-size:var(--font-size-small);
-  }  
-body { 
-/* CSS Variables that may have been missed get put on body */ 
-    --text-default: #353740; 
-    --sans-serif: "SÃ¶hne",helvetica,sans-serif; 
-    --font-size-small: 16px; 
-    --bg-color: #fff; 
-    --gray-100: #ececf1; 
-    --gray-600: #6e6e80; 
-    --gray-50: #f7f7f8; 
-    --gray-800: #353740; 
-    --gray-200: #d9d9e3; 
-} 
+
+
 
 * { 
     box-sizing: border-box;
@@ -226,7 +211,7 @@ html {
 } 
 
 a { 
-    color: #10a37f; 
+
     cursor: pointer; 
     text-decoration: none;
 } 
@@ -242,17 +227,12 @@ a {
     transition: all .15s ease-in-out;
 } 
 
-a:visited { 
-    color: #10a37f;
-} 
 
 .app-navigation-menu-item:visited:not(:hover):not(.active) { 
     color: var(--gray-600);
 } 
 
-a:hover { 
-    color: #1a7f64;
-} 
+
 
 .app-navigation-menu-item:hover:not(.active) { 
     background: var(--gray-50); 
@@ -382,3 +362,20 @@ a:hover {
    width: 24px;  
     height: 24px;  
 }  
+body {  
+  color:var(--text-default);
+  font-family:var(--sans-serif);
+  font-size:var(--font-size-small);
+}  
+body { 
+/* CSS Variables that may have been missed get put on body */ 
+  --text-default: #353740; 
+  --sans-serif: "SÃ¶hne",helvetica,sans-serif; 
+  --font-size-small: 16px; 
+  --bg-color: #fff; 
+  --gray-100: #ececf1; 
+  --gray-600: #6e6e80; 
+  --gray-50: #f7f7f8; 
+  --gray-800: #353740; 
+  --gray-200: #d9d9e3; 
+} 
